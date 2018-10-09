@@ -7,6 +7,7 @@ use ansi_term::Style;
 use console::AnsiCodeIterator;
 
 use syntect::easy::HighlightLines;
+use syntect::highlighting::Color;
 use syntect::highlighting::Theme;
 use syntect::parsing::SyntaxSet;
 
@@ -296,6 +297,20 @@ impl<'a> Printer for InteractivePrinter<'a> {
             }
         }
 
+        // Line highlighting
+        // TODO: add command-line option `--highlight-line`
+        let background = if line_number == 5 {
+            // TODO: read highlight-line background color from color theme
+            Some(Color {
+                r: 40,
+                g: 40,
+                b: 40,
+                a: 255,
+            })
+        } else {
+            None
+        };
+
         // Line contents.
         if self.config.output_wrap == OutputWrap::None {
             let true_color = self.config.true_color;
@@ -306,7 +321,7 @@ impl<'a> Printer for InteractivePrinter<'a> {
                 write!(
                     handle,
                     "{}",
-                    as_terminal_escaped(style, &*text, true_color, colored_output,)
+                    as_terminal_escaped(style, &*text, true_color, colored_output, background)
                 )?;
             }
 
@@ -362,6 +377,7 @@ impl<'a> Printer for InteractivePrinter<'a> {
                                             ),
                                             self.config.true_color,
                                             self.config.colored_output,
+                                            background
                                         )
                                     )?;
                                     break;
@@ -401,6 +417,7 @@ impl<'a> Printer for InteractivePrinter<'a> {
                                         ),
                                         self.config.true_color,
                                         self.config.colored_output,
+                                        background
                                     ),
                                     panel_wrap.clone().unwrap()
                                 )?;
