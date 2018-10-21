@@ -82,6 +82,45 @@ mod errors {
 
 use errors::*;
 
+fn run_diff_subcommand(config: &Config) -> Option<()> {
+    use git2::{DiffOptions, Repository};
+    use std::path::Path;
+    use line_range::{LineRange, LineRanges};
+
+    let repo = Repository::discover(".").ok()?;
+
+    let mut diff_options = DiffOptions::new();
+    diff_options.context_lines(2);
+
+    let diff = repo
+        .diff_index_to_workdir(None, Some(&mut diff_options))
+        .ok()?;
+
+    let _ = diff.foreach(
+        &mut |_, _| true,
+        None,
+        Some(&mut |delta, hunk| {
+            let path = delta.new_file().path().unwrap_or_else(|| Path::new(""));
+
+            let new_start = hunk.new_start();
+            let new_lines = hunk.new_lines();
+            let new_end = (new_start + new_lines) as i32 - 1;
+            // println!("{:?} {}:{}", path, new_start, new_end);
+
+            let path_str = path.to_string_lossy();
+            let mut new_config = config.clone();
+            new_config.files = vec![InputFile::Ordinary(&path_str)];
+            new_config.line_ranges = LineRanges::from(vec![LineRange::from(&format!("{}:{}", new_start, new_end)).unwrap()]);
+            run_controller(&new_config).unwrap(); // TODO
+
+            true
+        }),
+        None
+    );
+
+    Some(())
+}
+
 fn run_cache_subcommand(matches: &clap::ArgMatches) -> Result<()> {
     if matches.is_present("init") {
         let source_dir = matches.value_of("source").map(Path::new);
@@ -214,6 +253,10 @@ fn run() -> Result<bool> {
 
                 run_controller(&config)
             }
+        }
+        ("diff", _) => {
+            run_diff_subcommand(&app.config()?);
+            Ok(true)
         }
         _ => {
             let config = app.config()?;

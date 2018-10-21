@@ -167,12 +167,22 @@ pub fn build_app(interactive_output: bool) -> ClapApp<'static, 'static> {
                 .value_name("N:M")
                 .help("Only print the lines from N to M.")
                 .long_help(
-                    "Only print the specified range of lines for each file. \
+                    "Only print the specified range(s) of lines for each file. \
                      For example:\n  \
                      '--line-range 30:40' prints lines 30 to 40\n  \
                      '--line-range :40' prints lines 1 to 40\n  \
                      '--line-range 40:' prints lines 40 to the end of the file",
                 ),
+        )
+        .arg(
+            Arg::with_name("diff-context")
+                .long("diff-context")
+                .overrides_with("diff-context")
+                .conflicts_with("line-range")
+                .takes_value(true)
+                .value_name("N")
+                .help("TODO")
+                .long_help("TODO"),
         )
         .arg(
             Arg::with_name("color")
@@ -356,6 +366,10 @@ pub fn build_app(interactive_output: bool) -> ClapApp<'static, 'static> {
                     "Create completely new syntax and theme sets \
                      (instead of appending to the default sets).",
                 )),
+        )
+        .subcommand(
+            SubCommand::with_name("diff")
+                .about("TODO")
         )
         .help_message("Print this help message.")
         .version_message("Show version information.")
