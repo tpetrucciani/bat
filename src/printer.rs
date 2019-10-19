@@ -103,7 +103,12 @@ impl<'a> InteractivePrinter<'a> {
     ) -> Self {
         let theme = assets.get_theme(&config.theme);
 
-        let background_color_highlight = theme.settings.line_highlight;
+        let background_color_highlight = Some(Color {
+            r: 0x2E,
+            g: 0x39,
+            b: 0x47,
+            a: 0xFF
+        });
 
         let colors = if config.colored_output {
             Colors::colored(theme, config.true_color)
